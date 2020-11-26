@@ -10,3 +10,7 @@
  quedaria fecha_comentario de ese comentario como ultimo comentario? CASSO
 
 6) patron de busqueda nostros definimos porque se busca? ej, apellido, nombre. etc
+
+7) EN el ejercicio de vista el primero cuando dice listar todas las categorias sin categorias esta es nulo o es 'Sin Categoria'
+
+8) FOrma facil de sacar intervalo
