@@ -24,7 +24,7 @@ CREATE OR REPLACE FUNCTION FN_GR05_Date_Control()
                 FROM GR05_COMENTA
                 WHERE id_usuario = NEW.id_usuario
                 AND id_juego = NEW.id_juego;
-            IF (fecha_ult_coment <> null AND fecha_primer_coment > NEW.fecha_comentario) THEN
+            IF (fecha_ult_coment IS NOT NULL AND fecha_primer_coment > NEW.fecha_comentario) THEN
                 raise exception 'La fecha de su ultimo comentario es anterior a su primer comentario';
             END IF;
         return NEW;
@@ -43,8 +43,8 @@ CREATE OR REPLACE FUNCTION FN_GR05_Date_Control_Day()
         BEGIN
             SELECT fecha_ultimo_com into fecha_ult_coment
                 FROM GR05_COMENTA
-                where new.id_usuario = id_usuario AND
-                new.id_juego = id_juego AND
+                where id_usuario = new.id_usuario AND
+                id_juego = new.id_juego AND
                 (EXTRACT('DAY' FROM fecha_ult_coment) = EXTRACT('DAY' FROM NEW.fecha_comentario) AND
                  EXTRACT('MONTH' FROM fecha_ult_coment) = EXTRACT('MONTH' FROM NEW.fecha_comentario) AND
                  EXTRACT('YEAR' FROM fecha_ult_coment) = EXTRACT('YEAR' FROM NEW.fecha_comentario));
