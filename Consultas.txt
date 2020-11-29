@@ -1,10 +1,10 @@
-1) se tiene que poner los triggers de forma declarativa en el informe?
+1) se tiene que poner los triggers de forma declarativa en el informe? RTA: si
 
 2) preguntar cuales son los indices y como se detallan los mismos
 
 3) la B)_ a cuando dice que este no es nulo habla de la fecha del comentario? VIERA
 
-4) un usuario no puede comentar un juego no ha jugado y tambien finalizado? JUAN
+4) un usuario no puede comentar un juego no ha jugado y tambien finalizado? 
 
 5) si en el servicio de sincronizacion modificamos el id_usuario o id_juego
  quedaria fecha_comentario de ese comentario como ultimo comentario? CASSO
