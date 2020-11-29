@@ -6,9 +6,10 @@ SELECT comentario, fecha_comentario
 FROM GR05_COMENTARIO g
 WHERE g.id_juego IN (SELECT j.id_juego
                         FROM GR05_juego j
-                            WHERE id_categoria LIKE 'Sin Categoria')
-  --AND fecha_comentario >=  EXTRACT('MONTH' FROM NOW()) - 1 ;
-  AND fecha_comentario >=  NOW() - interval '1 month';
+                            WHERE id_categoria IN (SELECT id_categoria
+                                FROM GR05_CATEGORIA
+                                WHERE descripcion <> 'Sin Categoria'))
+  AND fecha_comentario >=  NOW() - '1 month'::interval;
     --DATEADD(MONTH, -1, GETDATE())
 
 -- Listar aquellos usuarios que han comentado TODOS los juegos durante el
@@ -23,7 +24,7 @@ WHERE id_usuario IN (SELECT id_usuario
                          SELECT id_usuario
                          FROM GR05_COMENTARIO
                          WHERE fecha_comentario
-                                   BETWEEN NOW() - interval '1 year' AND NOW()
+                                   BETWEEN NOW() - '1 year'::interval AND NOW()
                          HAVING COUNT(id_juego) = (SELECT COUNT(id_juego) FROM GR05_JUEGO)));
 
 -- Realizar el ranking de los 20 juegos mejor puntuados por los Usuarios.
@@ -34,10 +35,11 @@ CREATE VIEW GR05_MOST_20_GAMES AS
 SELECT *
 FROM GR05_JUEGO
 WHERE id_juego IN (SELECT id_juego
-   FROM GR05_VOTO
-   HAVING count(*) > 5
-   ORDER BY AVG(valor_voto) ASC
-   LIMIT 20);
+   FROM GR05_VOTO v
+    GROUP BY v.id_juego
+    HAVING count(*) > 5
+    ORDER BY AVG(v.valor_voto) DESC
+    LIMIT 20);
 
 /* LOS_10_JUEGOS_MAS_JUGADOS: Generar una vista con los 10 juegos más jugados. */
 
@@ -45,6 +47,7 @@ CREATE VIEW GR05_MOST_10_GAME AS
 SELECT *
 FROM GR05_JUEGO
 WHERE id_juego IN (SELECT id_juego
-   FROM GR05_JUEGO
-   ORDER BY COUNT(id_juego) ASC
-   LIMIT 10);
+    FROM GR05_JUEGA j
+    GROUP BY j.id_juego
+    ORDER BY COUNT(j.id_juego) DESC
+    LIMIT 10);
