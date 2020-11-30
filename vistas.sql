@@ -41,7 +41,7 @@ LANGUAGE 'plpgsql';
 -- juegos de la Categoría “Sin Categorías”
 
 CREATE VIEW GR05_LAST_COMENT_MONTH AS
-SELECT comentario, fecha_comentario
+SELECT *
 FROM GR05_COMENTARIO g
 WHERE g.id_juego IN (SELECT j.id_juego
                         FROM GR05_juego j
