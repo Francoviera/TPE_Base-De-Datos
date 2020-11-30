@@ -5,13 +5,12 @@
 --CHECK ( NOT EXIST (
     SELECT fecha_primer_com
         FROM GR05_COMENTA
-        fecha_primer_com > fecha_ultimo_com;))
+        WHERE fecha_primer_com > fecha_ultimo_com;))
  */
 
 CREATE TRIGGER TR_GR05_COMENTARIO_Date_Control BEFORE
     INSERT on GR05_COMENTARIO
     FOR EACH ROW
-    --WHEN (NEW.fecha_comentario <> null)
     execute procedure FN_GR05_Date_Control();
 
 CREATE OR REPLACE FUNCTION FN_GR05_Date_Control()
@@ -24,7 +23,7 @@ CREATE OR REPLACE FUNCTION FN_GR05_Date_Control()
                 FROM GR05_COMENTA
                 WHERE id_usuario = NEW.id_usuario
                 AND id_juego = NEW.id_juego;
-            IF (fecha_ult_coment IS NOT NULL AND fecha_primer_coment > NEW.fecha_comentario) THEN
+            IF (fecha_ult_coment is not null AND fecha_primer_coment > NEW.fecha_comentario) THEN
                 raise exception 'La fecha de su ultimo comentario es anterior a su primer comentario';
             END IF;
         return NEW;
@@ -38,7 +37,8 @@ ALTER TABLE GR05_COMENTARIO ADD CONSTRAINT CK_GR05_DATE_CONTROL_DAY
         CHECK (NOT EXISTS(
                 SELECT 1
                 FROM GR05_COMENTARIO
-                group by extract('DAY' FROM fecha_comentario), extract('MONTH' FROM fecha_comentario), extract('YEAR' FROM fecha_comentario)
+                group by fecha_comentario
+                --group by extract('DAY' FROM fecha_comentario), extract('MONTH' FROM fecha_comentario), extract('YEAR' FROM fecha_comentario)
                 having COUNT(*)>1
             ));
 */
@@ -54,12 +54,13 @@ CREATE OR REPLACE FUNCTION FN_GR05_Date_Control_Day()
         BEGIN
             SELECT fecha_ultimo_com into fecha_ult_coment
                 FROM GR05_COMENTA
-                where id_usuario = new.id_usuario AND
-                id_juego = new.id_juego AND
-                (EXTRACT('DAY' FROM fecha_ult_coment) = EXTRACT('DAY' FROM NEW.fecha_comentario) AND
-                 EXTRACT('MONTH' FROM fecha_ult_coment) = EXTRACT('MONTH' FROM NEW.fecha_comentario) AND
-                 EXTRACT('YEAR' FROM fecha_ult_coment) = EXTRACT('YEAR' FROM NEW.fecha_comentario));
-            IF (fecha_ult_coment) THEN
+                where new.id_usuario = id_usuario AND
+                new.id_juego = id_juego AND
+                fecha_ultimo_com = new.fecha_comentario;
+                --(EXTRACT('DAY' FROM fecha_ult_coment) = EXTRACT('DAY' FROM NEW.fecha_comentario) AND
+                 --EXTRACT('MONTH' FROM fecha_ult_coment) = EXTRACT('MONTH' FROM NEW.fecha_comentario) AND
+                 --EXTRACT('YEAR' FROM fecha_ult_coment) = EXTRACT('YEAR' FROM NEW.fecha_comentario));
+            IF (fecha_ult_coment is not null) THEN
                 raise exception 'ya hiciste un comentario en el dia de hoy';
             END IF;
         return NEW;
@@ -88,14 +89,14 @@ CREATE TRIGGER TR_GR05_Vote_Control AFTER
 CREATE OR REPLACE FUNCTION FN_GR05_Vote_Control()
     RETURNS TRIGGER AS $$
         declare usuario GR05_VOTO.id_usuario%type;
-        declare juego GR05_VOTO.id_juego%type;
+        --declare juego GR05_VOTO.id_juego%type;
         BEGIN
-            SELECT id_usuario, id_juego into usuario, juego
+            SELECT id_usuario into usuario
                 FROM GR05_VOTO v
                 where new.id_usuario = v.id_usuario AND
                       new.id_juego = v.id_juego;
 
-            IF (usuario <> new.id_usuario OR juego <> new.id_juego) THEN
+            IF (usuario is null) THEN
             --IF NOT (usuario AND juego) THEN
                 raise exception 'No puedes recomendar sin antes votar el juego';
             END IF;
@@ -126,15 +127,15 @@ CREATE OR REPLACE FUNCTION FN_G05_CONTROL_GAME_COMENT() RETURNS Trigger AS
 $$
 DECLARE
     usuario GR05_JUEGA.id_usuario%type;
-    juego GR05_JUEGA.id_juego%type;
+    --juego GR05_JUEGA.id_juego%type;
 BEGIN
-    SELECT id_usuario, id_juego into usuario, juego
+    SELECT id_usuario into usuario
     FROM GR05_JUEGA
     WHERE id_usuario = NEW.id_usuario
       AND id_juego = NEW.id_juego;
-        IF (usuario <> NEW.id_usuario AND juego <> NEW.id_juego)THEN
+        IF (usuario is null)THEN
        --IF NOT (usuario AND juego) THEN
-        RAISE EXCEPTION 'No puedes votar un juego que no has jugado';
+        RAISE EXCEPTION 'No puedes Comentar un juego que no has jugado';
     END IF;
     RETURN NEW;
 END
