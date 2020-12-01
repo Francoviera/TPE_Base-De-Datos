@@ -93,20 +93,11 @@ CREATE VIEW GR05_MOST_20_PLAYED_GAMES AS
 
 /* LOS_10_JUEGOS_MAS_JUGADOS: Generar una vista con los 10 juegos más jugados. */
 
---actualizable
 CREATE VIEW GR05_MOST_10_GAME AS
-SELECT *
-FROM GR05_JUEGO
-WHERE id_juego IN (SELECT id_juego
-    FROM GR05_JUEGA j
-    GROUP BY j.id_juego
-    ORDER BY COUNT(j.id_juego) DESC
-    LIMIT 10);
-
---no actualizable
-CREATE VIEW GR05_MOST_10_GAME AS
-SELECT jo.id_juego, jo.nombre_juego, jo.descripcion_juego, jo.id_categoria
-FROM GR05_JUEGO jo JOIN gr05_juega ja on (jo.id_juego = ja.id_juego)
-    GROUP BY jo.id_juego
-    ORDER BY COUNT(jo.id_juego) DESC
-    LIMIT 10;
+    SELECT *
+        FROM GR05_JUEGO
+        WHERE id_juego IN (SELECT id_juego
+            FROM GR05_JUEGA j
+            GROUP BY j.id_juego
+            ORDER BY COUNT(j.id_juego) DESC
+            LIMIT 10);

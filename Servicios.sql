@@ -36,6 +36,33 @@ $$
 drop trigger TR_GR05_SYNCHRONIZATION_COMENT ON gr05_comentario cascade;
 drop function FN_GR05_SYNCHRONIZATION_COMENT;
 
+CREATE TRIGGER TR_GR05_SYNCHRONIZATION_COMENT_DELETE
+    AFTER DELETE
+    ON GR05_COMENTARIO
+    FOR EACH ROW
+    execute procedure FN_GR05_SYNCHRONIZATION_COMENT_DELETE();
+
+drop trigger TR_GR05_SYNCHRONIZATION_COMENT_DELETE on gr05_comentario;
+
+CREATE OR REPLACE FUNCTION FN_GR05_SYNCHRONIZATION_COMENT_DELETE() RETURNS Trigger AS
+$$
+DECLARE
+    fecha_coment GR05_COMENTARIO.fecha_comentario%type;
+
+BEGIN
+    SELECT fecha_comentario into fecha_coment
+        FROM GR05_COMENTARIO
+        ORDER BY fecha_comentario DESC
+        LIMIT 1;
+
+    IF (fecha_coment < old.fecha_comentario) THEN
+        UPDATE GR05_COMENTA SET fecha_ultimo_com = fecha_coment WHERE id_juego = OLD.id_juego AND id_usuario = OLD.id_usuario;
+    end if;
+    RETURN OLD;
+END
+$$
+    LANGUAGE 'plpgsql';
+
 -- 2- Dado un patrón de búsqueda devolver todos los datos de el o los usuarios junto con la cantidad de
 -- juegos que ha jugado y la cantidad de votos que ha realizado
 
