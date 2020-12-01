@@ -6,13 +6,12 @@ CREATE OR REPLACE FUNCTION FN_GR05_Date_Control()
     RETURNS TRIGGER AS $$
         declare
             fecha_primer_coment GR05_COMENTA.fecha_primer_com%type;
-            fecha_ult_coment GR05_COMENTA.fecha_ultimo_com%type;
         BEGIN
-            SELECT fecha_primer_com, fecha_ultimo_com into fecha_primer_coment, fecha_ult_coment
+            SELECT fecha_primer_com into fecha_primer_coment
                 FROM GR05_COMENTA
                 WHERE id_usuario = NEW.id_usuario
                 AND id_juego = NEW.id_juego;
-            IF (fecha_ult_coment is not null AND fecha_primer_coment > NEW.fecha_comentario) THEN
+            IF (fecha_primer_coment > NEW.fecha_comentario) THEN
                 raise exception 'La fecha de su ultimo comentario es anterior a su primer comentario';
             END IF;
         return NEW;
@@ -29,13 +28,15 @@ CREATE TRIGGER TR_GR05_COMENTARIO_Date_Control BEFORE
 CREATE OR REPLACE FUNCTION FN_GR05_Date_Control_Day()
     RETURNS TRIGGER AS $$
         declare fecha_ult_coment GR05_COMENTA.fecha_ultimo_com%type;
+        declare fecha_primer GR05_COMENTA.fecha_primer_com%type;
         BEGIN
-            SELECT fecha_ultimo_com into fecha_ult_coment
+            SELECT fecha_ultimo_com, fecha_primer_com into fecha_ult_coment, fecha_primer
                 FROM GR05_COMENTA
                 where new.id_usuario = id_usuario AND
                 new.id_juego = id_juego AND
-                fecha_ultimo_com = new.fecha_comentario;
-            IF (fecha_ult_coment is not null) THEN
+                date(fecha_primer_com) = date(new.fecha_comentario) OR
+                date(fecha_ultimo_com) = date(new.fecha_comentario);
+            IF (fecha_ult_coment is not null OR date(fecha_primer) = date(new.fecha_comentario)) THEN
                 raise exception 'ya hiciste un comentario en el dia de hoy';
             END IF;
         return NEW;
@@ -52,7 +53,6 @@ CREATE TRIGGER TR_GR05_Date_Control_Day BEFORE
 CREATE OR REPLACE FUNCTION FN_GR05_Vote_Control()
     RETURNS TRIGGER AS $$
         declare usuario GR05_VOTO.id_usuario%type;
-        --declare juego GR05_VOTO.id_juego%type;
         BEGIN
             SELECT id_usuario into usuario
                 FROM GR05_VOTO v
@@ -60,7 +60,6 @@ CREATE OR REPLACE FUNCTION FN_GR05_Vote_Control()
                       new.id_juego = v.id_juego;
 
             IF (usuario is null) THEN
-            --IF NOT (usuario AND juego) THEN
                 raise exception 'No puedes recomendar sin antes votar el juego';
             END IF;
         RETURN NEW;
@@ -107,7 +106,6 @@ CREATE OR REPLACE FUNCTION FN_GR05_SYNCHRONIZATION_COMENT() RETURNS Trigger AS
 $$
 DECLARE
     usuario GR05_COMENTARIO.id_usuario%type;
-
 BEGIN
     SELECT id_usuario into usuario
     FROM GR05_COMENTA
@@ -146,7 +144,8 @@ BEGIN
 
     IF (fecha_coment IS NULL) THEN
         DELETE FROM GR05_COMENTA WHERE id_usuario = OLD.id_usuario AND id_juego = OLD.id_juego;
-
+    ELSIF (date(fecha_coment) = (select date(fecha_primer_com) from gr05_comenta where id_usuario = old.id_usuario and id_juego = old.id_juego)) THEN
+        UPDATE GR05_COMENTA SET fecha_ultimo_com = null WHERE id_juego = OLD.id_juego AND id_usuario = OLD.id_usuario;
     ELSIF (fecha_coment < old.fecha_comentario) THEN
         UPDATE GR05_COMENTA SET fecha_ultimo_com = fecha_coment WHERE id_juego = OLD.id_juego AND id_usuario = OLD.id_usuario;
     end if;
@@ -193,6 +192,8 @@ BEGIN
 END; $$
 LANGUAGE 'plpgsql';
 
+select * from  FN_G05_MAIL_PATTERN('%@%');
+
 -----------------------------------------------VISTAS------------------------------------------
 
 --Listar todos los comentarios realizados durante el último mes descartando aquellos
@@ -222,9 +223,10 @@ WHERE id_usuario IN (SELECT id_usuario
                          SELECT id_usuario
                          FROM GR05_COMENTARIO
                          WHERE fecha_comentario
-                                   BETWEEN NOW() - '1 year'::interval AND NOW()
+                         BETWEEN NOW() - '1 year'::interval AND NOW()
+                         GROUP BY (id_usuario)
                          HAVING COUNT(id_juego) = (SELECT COUNT(id_juego) FROM GR05_JUEGO)));
-
+select * from GR05_LIST_USER_LAST_YEAR;
 -- Realizar el ranking de los 20 juegos mejor puntuados por los Usuarios.
 -- El ranking debe ser generado considerando el promedio del valor puntuado por los usuarios y que el
 -- juego hubiera sido calificado más de 5 veces
