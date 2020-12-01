@@ -58,11 +58,11 @@ BEGIN
     IF (fecha_coment IS NULL) THEN 
         DELETE FROM GR05_COMENTA WHERE id_usuario = OLD.id_usuario AND id_juego = OLD.id_juego;
 
-    ELSE IF (fecha_coment < old.fecha_comentario) THEN
+    ELSIF (fecha_coment < old.fecha_comentario) THEN
         UPDATE GR05_COMENTA SET fecha_ultimo_com = fecha_coment WHERE id_juego = OLD.id_juego AND id_usuario = OLD.id_usuario;
     end if;
     RETURN OLD;
-END
+    END;
 $$
     LANGUAGE 'plpgsql';
 
