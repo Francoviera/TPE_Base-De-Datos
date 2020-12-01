@@ -591,6 +591,7 @@ INSERT INTO GR05_JUEGA (id_usuario,id_juego, finalizado) VALUES (64,83, FALSE);
 INSERT INTO GR05_JUEGA (id_usuario,id_juego, finalizado) VALUES (42,15, TRUE);
 INSERT INTO GR05_JUEGA (id_usuario,id_juego, finalizado) VALUES (50,28, NULL);
 
+
 --VOTO
 INSERT INTO GR05_VOTO (id_voto,valor_voto,id_usuario,id_juego) VALUES (1,10,27,26);
 INSERT INTO GR05_VOTO (id_voto,valor_voto,id_usuario,id_juego) VALUES (2,2,38,24);

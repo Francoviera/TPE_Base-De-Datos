@@ -23,6 +23,18 @@ CREATE TRIGGER TR_GR05_COMENTARIO_Date_Control BEFORE
     FOR EACH ROW
     execute procedure FN_GR05_Date_Control();
 
+--DISPARADOR:
+
+/*
+INSERT INTO GR05_COMENTARIO(id_usuario,id_juego,id_comentario,fecha_comentario,comentario)
+        VALUES (19,64,1,to_timestamp('15-11-2020', 'DD-MM-YYYY'),'Re dificil, no puedo pasar el nivel 2');
+
+        INSERT INTO GR05_COMENTARIO(id_usuario,id_juego,id_comentario,fecha_comentario,comentario)
+        VALUES (19,64,2,to_timestamp('10-11-2020', 'DD-MM-YYYY'),'Un buen juego');
+*/
+
+
+
 --Cada usuario sólo puede comentar una vez al día cada juego.
 
 CREATE OR REPLACE FUNCTION FN_GR05_Date_Control_Day()
@@ -48,6 +60,16 @@ CREATE TRIGGER TR_GR05_Date_Control_Day BEFORE
     FOR EACH ROW
     execute procedure FN_GR05_Date_Control_Day();
 
+--DISPARADOR:
+
+/*
+        INSERT INTO GR05_COMENTARIO(id_usuario,id_juego,id_comentario,fecha_comentario,comentario)
+        VALUES (36,51,3,to_timestamp('28-11-2020', 'DD-MM-YYYY'),'Este juego me encanto la verdad');
+
+        INSERT INTO GR05_COMENTARIO(id_usuario,id_juego,id_comentario,fecha_comentario,comentario)
+        VALUES (36,51,4,to_timestamp('28-11-2020', 'DD-MM-YYYY'),'Ahora que lo jugue un poco mas me di cuenta que el juego es malisimo');
+*/
+
 --Un usuario no puede recomendar un juego si no ha votado previamente dicho juego.
 
 CREATE OR REPLACE FUNCTION FN_GR05_Vote_Control()
@@ -70,6 +92,12 @@ CREATE TRIGGER TR_GR05_Vote_Control AFTER
     INSERT or UPDATE of id_usuario, id_juego on GR05_RECOMENDACION
     FOR EACH ROW
     execute procedure FN_GR05_Vote_Control();
+
+--DISPARADOR:
+
+/*
+        INSERT INTO GR05_RECOMENDACION(id_recomendacion,email_recomendado,id_usuario,id_juego) VALUES (102,'juanma04@testing.com.ar',49,55);
+*/
 
 --Un usuario no puede comentar un juego que no ha jugado.
 
@@ -95,6 +123,14 @@ CREATE TRIGGER TR_GR05_CONTROL_GAME_COMENT BEFORE INSERT
     ON GR05_COMENTARIO
     FOR EACH ROW
     execute procedure FN_G05_CONTROL_GAME_COMENT();
+
+--DISPARADOR:
+
+/*
+        INSERT INTO GR05_COMENTARIO(id_usuario,id_juego,id_comentario,fecha_comentario,comentario)
+        VALUES (15,59,5,to_timestamp('21-9-2020', 'DD-MM-YYYY'),'Ya lo estoy descargando, mañana mismo lo arranco a jugar');
+*/
+
 
 --------------------------------------------------SERVICIOS------------------------------------------------------
 
@@ -192,7 +228,7 @@ BEGIN
 END; $$
 LANGUAGE 'plpgsql';
 
-select * from  FN_G05_MAIL_PATTERN('%@%');
+
 
 -----------------------------------------------VISTAS------------------------------------------
 
@@ -209,7 +245,7 @@ WHERE g.id_juego IN (SELECT j.id_juego
                                 WHERE descripcion <> 'Sin Categoria'))
   AND fecha_comentario >=  NOW() - '1 month'::interval;
 
-select * from GR05_LAST_COMENT_MONTH;
+
 
 -- Listar aquellos usuarios que han comentado TODOS los juegos durante el
 -- último año, teniendo en cuenta que sólo pueden comentar aquellos juegos que han jugado.
@@ -226,7 +262,7 @@ WHERE id_usuario IN (SELECT id_usuario
                          BETWEEN NOW() - '1 year'::interval AND NOW()
                          GROUP BY (id_usuario)
                          HAVING COUNT(id_juego) = (SELECT COUNT(id_juego) FROM GR05_JUEGO)));
-select * from GR05_LIST_USER_LAST_YEAR;
+
 -- Realizar el ranking de los 20 juegos mejor puntuados por los Usuarios.
 -- El ranking debe ser generado considerando el promedio del valor puntuado por los usuarios y que el
 -- juego hubiera sido calificado más de 5 veces
@@ -252,3 +288,4 @@ CREATE VIEW GR05_MOST_10_GAME AS
             GROUP BY j.id_juego
             ORDER BY COUNT(j.id_juego) DESC
             LIMIT 10);
+
